@@ -1,6 +1,5 @@
 use std::fmt::Display;
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::convert::TryInto;
 
 pub struct InitilizationSeed {
     length_pendulum_first: u64,
@@ -18,9 +17,11 @@ impl InitilizationSeed {
         if x.len() < 32 {
             return None
         }
-        let K = &(x.as_bytes()[0..31]);
+        let _k = &(x.as_bytes()[0..31]);
 
-        let L: u64 = 32;
+        let _l: u64 = 32;
+
+        // 3*l/4 + i; i < l/4; l 
 
         //
         // k1 = K[i], k2 = K[L/4+i], k3 = K[L/2+i], k4 = K[3*L/4+i]
@@ -32,37 +33,46 @@ impl InitilizationSeed {
             Vec::<u64>::new(),
         ];
         
-        for i in 0..L/4 {
-            k[0].push(K[i as usize].into());
-            k[1].push(K[(L/4+i) as usize].into());
-            k[2].push(K[(L/2+i) as usize].into());
-            k[3].push(K[(3*L/4+i) as usize].into());
+        for i in 0.._l/4 {
+            k[0].push(_k[i as usize].into());
+            k[1].push(_k[(_l/4+i) as usize].into());
+            k[2].push(_k[(_l/2+i) as usize].into());
+            k[3].push(_k[(3*_l/4+i) as usize].into());
         }
 
-        let mut a: [InitilizationSeed; 64];
+        let mut a: Vec<InitilizationSeed> = vec!();
         
-        for j in 0..64 {
+        for _ in 0..64 {
             let mut i = 0;
-            while L/4 - i > 0 {
-                let length_pendulum_first = k[0][i as usize]^k[1][i as usize];
-                let length_pendulum_second = k[0][i as usize]^k[2][i as usize];
-                let mass_first = k[0][i as usize]^k[3][i as usize];
-                let mass_second = k[1][i as usize]^k[2][i as usize];
-                let tension_first = k[1][i as usize]^k[3][i as usize];
-                let tension_second = k[2][i as usize]^k[3][i as usize];
-                let radius = k[0][i as usize];
+            let mut length_pendulum_first: u64 = 0;
+            let mut length_pendulum_second: u64 = 0;
+            let mut mass_first: u64 = 0;
+            let mut mass_second: u64 = 0;
+            let mut tension_first: u64 = 0;
+            let mut tension_second: u64 = 0;
+            let mut radius: u64 = 0;
 
-                a[j] = Self{
-                    length_pendulum_first,
-                    length_pendulum_second,
-                    mass_first,
-                    mass_second,
-                    tension_first,
-                    tension_second,
-                    radius,  
-                };
+            while _l/4 - i > 0 {
+                length_pendulum_first = k[0][i as usize]^k[1][i as usize];
+                length_pendulum_second = k[0][i as usize]^k[2][i as usize];
+                mass_first = k[0][i as usize]^k[3][i as usize];
+                mass_second = k[1][i as usize]^k[2][i as usize];
+                tension_first = k[1][i as usize]^k[3][i as usize];
+                tension_second = k[2][i as usize]^k[3][i as usize];
+                radius = k[0][i as usize];
                 i += 1;
             }
+
+            a.push(Self{
+                length_pendulum_first,
+                length_pendulum_second,
+                mass_first,
+                mass_second,
+                tension_first,
+                tension_second,
+                radius,  
+            });
+
         }
 
         let mut result = Self {
@@ -104,6 +114,8 @@ impl InitilizationSeed {
 ///
 /// # Examples
 /// ```
+/// use dprand::random_seed;
+/// 
 /// let seed = random_seed("example123456789qwertyuiopasdfghj");
 /// match seed {
 ///     Some(x) => {
@@ -115,7 +127,7 @@ impl InitilizationSeed {
 /// }
 /// ```
 pub fn random_seed<T: Display>(seed: T) -> Option<u64> {
-    let Initialisation = match crate::InitilizationSeed::new("sdfdsf") {
+    match crate::InitilizationSeed::new(seed) {
         Some(x) => x,
         None => return None,
     };
@@ -136,15 +148,11 @@ pub fn random() -> u64 {
 
 #[cfg(test)]
 mod tests {
+    use crate::random_seed;
 
     #[test]
     pub fn seed_init() {
-        let seed = crate::random_seed("dfsdf");
+        let seed = random_seed("example123456789qwertyuiopasdfghjsd");
         assert_eq!(seed, None);
-    }
-
-    #[test]
-    pub fn random_test() {
-        assert_ne!(crate::random(), None);
     }
 }
