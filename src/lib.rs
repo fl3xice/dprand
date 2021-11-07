@@ -1,3 +1,5 @@
+use due_time::Time;
+
 pub mod due_time;
 
 #[allow(unused)]
@@ -155,11 +157,20 @@ impl GenerationPendulum {
     pub fn generate(&mut self) -> (&Point, &Point) {
         self.calc_pos();
 
-        for _ in 0..self.double_pendulum.seed.abs().to_string().len() {
+        for _ in 0..1000 {
             self.new_pos();
         }
 
         (&self.c1, &self.c2)
+    }
+
+    pub fn create_seed() -> i64 {
+        let timer = Time::new();
+        for _ in 0..100 {
+            
+        }
+
+        (timer.get_tick() as i64).pow(2) * 10
     }
 }
 
@@ -176,7 +187,16 @@ mod tests {
 
     #[test]
     pub fn generation() {
-        let mut generator = GenerationPendulum::new(DoublePendulum::new(5544112356465456541));
+        let seed = GenerationPendulum::create_seed();
+        println!("{}", seed);
+        let mut generator = GenerationPendulum::new(DoublePendulum::new(seed));
         println!("{:?}", generator.generate());
+    }
+
+    #[test]
+    pub fn create_seed() {
+        for _ in 1..10 {
+            println!("{}", GenerationPendulum::create_seed());
+        }
     }
 }
