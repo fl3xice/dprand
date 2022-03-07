@@ -112,7 +112,6 @@ impl GenerationPendulum {
             double_pendulum: double_pendulum,
         }
     }
-
     fn calc_pos(&mut self) {
         self.c1.x = self.double_pendulum.length_of_rod.0 * self.double_pendulum.tension_of_rod.0.sin();
         self.c1.y = -1.0*self.double_pendulum.length_of_rod.0 * self.double_pendulum.tension_of_rod.0.cos();
